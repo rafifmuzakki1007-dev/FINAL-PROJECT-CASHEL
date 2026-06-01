@@ -26,13 +26,12 @@ class ItemPesanan {
 class RincianPesananScreen extends StatefulWidget {
   final int idPesanan;
   final String metodePembayaran;
-  final List<ItemPesanan> items; // ← SEMUA produk dalam pesanan
+  final List<ItemPesanan> items;
   final int totalBayar;
   final int ongkir;
-  final String? waktuPesanan; // dari riwayat, null jika pesanan baru
+  final String? waktuPesanan; 
 
-  // ── backward-compat: jika masih ada caller lama yg kirim 1 produk ──
-  // Bisa dihapus setelah semua caller diperbarui.
+
   factory RincianPesananScreen.single({
     Key? key,
     required int idPesanan,
@@ -107,9 +106,9 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
   Future<void> _fetchStatusDariDB() async {
     try {
       final url = Uri.parse(
-          '$_transactionUrl/get_detail_pesanan.php?id=${widget.idPesanan}');
-      final response =
-          await http.get(url).timeout(const Duration(seconds: 10));
+        '$_transactionUrl/get_detail_pesanan.php?id=${widget.idPesanan}',
+      );
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
       final result = jsonDecode(response.body);
 
       if (!mounted) return;
@@ -123,8 +122,9 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
             _statusPesanan = 'selesai';
             _isAdminKonfirmasi = true;
             _waktuSelesai = result['data']['tgl_pesanan'] != null
-                ? DateFormat('dd-MM-yyyy HH.mm')
-                    .format(DateTime.parse(result['data']['tgl_pesanan']))
+                ? DateFormat(
+                    'dd-MM-yyyy HH.mm',
+                  ).format(DateTime.parse(result['data']['tgl_pesanan']))
                 : DateFormat('dd-MM-yyyy HH.mm').format(DateTime.now());
           });
         } else if (statusDB == 'proses') {
@@ -150,9 +150,9 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
   Future<void> _cekStatusTerbaru() async {
     try {
       final url = Uri.parse(
-          '$_transactionUrl/get_detail_pesanan.php?id=${widget.idPesanan}');
-      final response =
-          await http.get(url).timeout(const Duration(seconds: 10));
+        '$_transactionUrl/get_detail_pesanan.php?id=${widget.idPesanan}',
+      );
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
       final result = jsonDecode(response.body);
 
       if (!mounted) return;
@@ -164,8 +164,9 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
             _statusPesanan = 'selesai';
             _isAdminKonfirmasi = true;
             _waktuSelesai = result['data']['tgl_pesanan'] != null
-                ? DateFormat('dd-MM-yyyy HH.mm')
-                    .format(DateTime.parse(result['data']['tgl_pesanan']))
+                ? DateFormat(
+                    'dd-MM-yyyy HH.mm',
+                  ).format(DateTime.parse(result['data']['tgl_pesanan']))
                 : DateFormat('dd-MM-yyyy HH.mm').format(DateTime.now());
           });
           _pollingTimer?.cancel();
@@ -207,9 +208,9 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
 
       if (result['status'] == 'success') {
         _pollingTimer?.cancel();
-        // Pop sheet (PilihAlasanBatalPage) dulu
+        // Pop sheet (PilihAlasanBatalPage) 
         Navigator.pop(context);
-        // Lalu replace RincianPesananScreen agar user tidak bisa back ke halaman ini
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -217,8 +218,7 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
               idPesanan: widget.idPesanan,
               items: widget.items,
               alasan: alasan,
-              waktuBatal:
-                  DateFormat('dd-MM-yyyy HH.mm').format(DateTime.now()),
+              waktuBatal: DateFormat('dd-MM-yyyy HH.mm').format(DateTime.now()),
               metodePembayaran: widget.metodePembayaran,
               tanggalPesanan: _waktuFormatted,
             ),
@@ -229,13 +229,14 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(result['message'] ?? 'Gagal membatalkan'),
-              backgroundColor: Colors.red),
+            content: Text(result['message'] ?? 'Gagal membatalkan'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } catch (e) {
       if (!mounted) return;
-      // Tutup sheet juga saat exception
+  
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
@@ -250,10 +251,9 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isSelesai = _statusPesanan == 'selesai';
-    final String displayMetode =
-        widget.metodePembayaran.toUpperCase() == 'COD'
-            ? 'CASH'
-            : widget.metodePembayaran.toUpperCase();
+    final String displayMetode = widget.metodePembayaran.toUpperCase() == 'COD'
+        ? 'CASH'
+        : widget.metodePembayaran.toUpperCase();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -262,16 +262,18 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon:
-              const Icon(Icons.arrow_back_ios, color: Colors.black, size: 18),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text("Rincian Pesanan",
-            style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                fontFamily: 'Poppins')),
+        title: const Text(
+          "Rincian Pesanan",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            fontFamily: 'Poppins',
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -286,7 +288,7 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Card produk — sekarang menampilkan SEMUA item
+                  // Card produk 
                   CardProdukPesanan(
                     items: widget.items,
                     totalBayar: widget.totalBayar,
