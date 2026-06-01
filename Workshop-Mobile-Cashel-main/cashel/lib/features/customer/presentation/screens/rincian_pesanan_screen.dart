@@ -83,8 +83,10 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
   String? _waktuSelesai;
   Timer? _pollingTimer;
 
-  static const String _serverIp = "192.168.18.154";
+  static const String _serverIp = "192.168.1.4";
   static const String _baseUrl = "http://$_serverIp/api_cashel/auth";
+  static const String _transactionUrl =
+      "http://$_serverIp/api_cashel/transaction";
 
   @override
   void initState() {
@@ -92,7 +94,7 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
     _waktuFormatted = widget.waktuPesanan?.isNotEmpty == true
         ? widget.waktuPesanan!
         : DateFormat('dd-MM-yyyy HH.mm').format(DateTime.now());
-    _startPollingStatusAdmin();
+    _fetchStatusDariDB();
   }
 
   @override
@@ -101,27 +103,73 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
     super.dispose();
   }
 
-  void _startPollingStatusAdmin() {
-    _cekStatusAdmin();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      if (_statusPesanan != 'selesai') _cekStatusAdmin();
-    });
-  }
-
-  Future<void> _cekStatusAdmin() async {
+  // Fetch status langsung dari get_detail_pesanan.php saat halaman dibuka
+  Future<void> _fetchStatusDariDB() async {
     try {
       final url = Uri.parse(
-          '$_baseUrl/cek_status_pesanan.php?id_pesanan=${widget.idPesanan}');
+          '$_transactionUrl/get_detail_pesanan.php?id=${widget.idPesanan}');
       final response =
           await http.get(url).timeout(const Duration(seconds: 10));
       final result = jsonDecode(response.body);
 
       if (!mounted) return;
-      if (result['status'] == 'success') {
-        final bool adminSudahKonfirmasi =
-            result['admin_konfirmasi'] == true ||
-                result['admin_konfirmasi'] == 1;
-        if (adminSudahKonfirmasi && !_isAdminKonfirmasi) {
+
+      if (result['success'] == true) {
+        final String statusDB = result['data']['status'] ?? 'diproses';
+
+        if (statusDB == 'selesai') {
+          // Pesanan sudah selesai dari DB langsung tampilkan selesai
+          setState(() {
+            _statusPesanan = 'selesai';
+            _isAdminKonfirmasi = true;
+            _waktuSelesai = result['data']['tgl_pesanan'] != null
+                ? DateFormat('dd-MM-yyyy HH.mm')
+                    .format(DateTime.parse(result['data']['tgl_pesanan']))
+                : DateFormat('dd-MM-yyyy HH.mm').format(DateTime.now());
+          });
+        } else if (statusDB == 'proses') {
+          // Status proses = admin sudah konfirmasi, tombol bisa diklik user
+          setState(() => _isAdminKonfirmasi = true);
+          _startPollingStatus();
+        } else {
+          // Status tertunda = masih menunggu konfirmasi admin
+          _startPollingStatus();
+        }
+      }
+    } catch (_) {
+      _startPollingStatus();
+    }
+  }
+
+  void _startPollingStatus() {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (_statusPesanan != 'selesai') _cekStatusTerbaru();
+    });
+  }
+
+  Future<void> _cekStatusTerbaru() async {
+    try {
+      final url = Uri.parse(
+          '$_transactionUrl/get_detail_pesanan.php?id=${widget.idPesanan}');
+      final response =
+          await http.get(url).timeout(const Duration(seconds: 10));
+      final result = jsonDecode(response.body);
+
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        final String statusDB = result['data']['status'] ?? 'diproses';
+        if (statusDB == 'selesai') {
+          setState(() {
+            _statusPesanan = 'selesai';
+            _isAdminKonfirmasi = true;
+            _waktuSelesai = result['data']['tgl_pesanan'] != null
+                ? DateFormat('dd-MM-yyyy HH.mm')
+                    .format(DateTime.parse(result['data']['tgl_pesanan']))
+                : DateFormat('dd-MM-yyyy HH.mm').format(DateTime.now());
+          });
+          _pollingTimer?.cancel();
+        } else if (statusDB == 'proses' && !_isAdminKonfirmasi) {
           setState(() => _isAdminKonfirmasi = true);
         }
       }
@@ -260,7 +308,11 @@ class _RincianPesananScreenState extends State<RincianPesananScreen> {
             isAdminKonfirmasi: _isAdminKonfirmasi,
             onBatalkan: _showBatalBottomSheet,
             onSelesai: _selesaikanPesanan,
-            onBeliLagi: () => Navigator.pop(context), // ← Kembali ke riwayat
+            onBeliLagi: () => Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const MainNavigation()),
+              (route) => false,
+            ),
           ),
         ],
       ),
