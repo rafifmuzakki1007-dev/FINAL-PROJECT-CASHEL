@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "651811922149",
+    "project_id": "cashel-de383",
+    "storage_bucket": "cashel-de383.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:651811922149:android:e9a839262f3fb9f961b40c",
+        "android_client_info": {
+          "package_name": "com.example.chasel"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "651811922149-p4jt32856crnbs9rnrflhndk1rq2s700.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.chasel",
+            "certificate_hash": "7b64ec8168f851c50dc259958d20e9c1b8bb7a9a"
+          }
+        },
+        {
+          "client_id": "651811922149-mfu4t2ulltrciortjagkkr48sfcu383p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWGvI_zo12gQcgOg-hgC2-G6lmvCcXFOU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "651811922149-mfu4t2ulltrciortjagkkr48sfcu383p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
